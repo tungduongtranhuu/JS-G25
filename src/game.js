@@ -16,24 +16,24 @@ export class Game {
 
     this.players.forEach(p => p.resetForRound());
 
-    // Chia bài ban đầu
+    // Distribution initiale des cartes
     for (const player of this.players) {
       const card = this.deck.draw();
       if (card instanceof ModifierCard) {
         console.log(`🃏 ${player.name} a reçu une carte spéciale: ${card.type} ${card.value}`);
-        player.addModifier(card); // Thêm lá bài Modifier vào tay người chơi
+        player.addModifier(card); // Ajouter une carte Modifier au joueur
       } else if (card instanceof ActionCard) {
         console.log(`🃏 ${player.name} a reçu une carte spéciale: ${card.type}`);
-        card.applyEffect(player, this); // Kích hoạt hiệu ứng của lá bài Action
+        card.applyEffect(player, this); //Appliquer l'effet de la carte Action
       } else {
-        console.log(`🃏 ${player.name} nhận được: ${card}`);
+        console.log(`🃏 ${player.name} a reçu: ${card}`);
         player.addCard(card);
       }
     }
 
-    // Xử lý lượt chơi
+    // Gestion des tours des joueurs
     for (const player of this.players) {
-      if (!player.active) continue; // Bỏ qua người chơi bị loại
+      if (!player.active) continue; // Ignorer les joueurs inactifs
 
       console.log(`\nTour de ${player.name}`);
       console.log(`Les cartes disponibles: ${this.deck.cards.length}`);
@@ -42,7 +42,7 @@ export class Game {
 
       if (action === 2) {
         console.log(`${player.name} a choisi de passer ce tour.`);
-        continue; // Bỏ qua lượt chơi của người chơi này
+        continue; // Passer le tour de ce joueur
       }
 
       const nbCarte = parseInt(await ask("Combien de cartes à tirer? (max: 7) "));
@@ -88,11 +88,11 @@ export class Game {
         }
       }
 
-      // Tính điểm cuối vòng
+      // Calcul des scores de fin de tour
       if (player.active) {
         let score = player.getRoundScore();
 
-        // 1️⃣ Áp dụng x2 trước
+        // 1️⃣ Appliquer les multiplicateurs x en premier
         player.modifiers
         .filter(m => m.type === "x")
         .forEach(m => {
@@ -100,7 +100,7 @@ export class Game {
         });
 
 
-        // 2️⃣ Cộng điểm +
+        // 2️⃣ Appliquer les additions +
         player.modifiers
         .filter(m => m.type === "+")
         .forEach(m => {
@@ -108,7 +108,7 @@ export class Game {
         });
 
 
-        // (3️⃣ Flip 7 )
+        // (3️⃣ Bonnus Flip 7 )
         if (player.flip7) {
           score += 15;
         }
@@ -116,24 +116,25 @@ export class Game {
         console.log(`${player.name} a maintenant ${player.score} points.`);
         }
 
-      // Kiểm tra người thắng
+      // Vérification de la victoire
       if (player.score >= 200) {
         console.log(`\n🏆 ${player.name} gagne la partie avec ${player.score} points !`);
         return true; // Fin du jeu
       }
     }
+    // Réinitialiser Second Chance à la fin du tour
     this.players.forEach(p => {
-      p.hasSecondChance = false; // Réinitialiser Second Chance à la fin du tour
+      p.hasSecondChance = false; 
     });
 
-    // Trộn lại bộ bài nếu hết bài
+    // Mélanger le deck si vide
     if (this.deck.cards.length === 0) {
       console.log(" La pioche est vide, on mélange les cartes défaussées.");
       this.deck.cards = [...this.deck.playedCards];
       this.deck.playedCards = [];
       this.deck.shuffle();
     }
-    // Chuyển dealer sang người bên trái
+    // Passer le role dealer à personne à gauche
     const firstPlayer = this.players.shift();
     this.players.push(firstPlayer);
 
